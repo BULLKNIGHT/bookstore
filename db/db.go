@@ -15,7 +15,7 @@ const collectionName = "books"
 var Collection *mongo.Collection
 
 func Init() {
-	dbURL := os.Getenv("DATABASE_URL")
+	dbURL := os.Getenv("MONGO_URL")
 	// client options
 	optionClient := options.Client().ApplyURI(dbURL)
 

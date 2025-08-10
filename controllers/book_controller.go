@@ -90,7 +90,7 @@ func deleteAllBooks() (*mongo.DeleteResult, error) {
 	return result, nil
 }
 
-func validateBody(r *http.Request) (models.Book, error) {
+func validateBook(r *http.Request) (models.Book, error) {
 	// no json data send
 	if r.Body == nil {
 		return models.Book{}, errors.New("no data found")
@@ -129,7 +129,7 @@ func GetAllBooks(w http.ResponseWriter, r *http.Request) {
 func CreateBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	book, err := validateBody(r)
+	book, err := validateBook(r)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -161,7 +161,7 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	book, err := validateBody(r)
+	book, err := validateBook(r)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)

@@ -7,11 +7,19 @@ import (
 	"github.com/BULLKNIGHT/bookstore/db"
 	"github.com/BULLKNIGHT/bookstore/routes"
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
-func main() {
-	db.Init()
+func init() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("No .env file found (using system env)")
+	}
 
+	db.Init()
+}
+
+func main() {
 	r := mux.NewRouter()
 	routes.RegisterBook(r)
 
