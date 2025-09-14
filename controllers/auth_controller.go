@@ -5,11 +5,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/BULLKNIGHT/bookstore/logger"
 	"github.com/BULLKNIGHT/bookstore/models"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -20,29 +20,15 @@ func loadPrivateKey() *rsa.PrivateKey {
 
 	privateKeyPEM, err := base64.StdEncoding.DecodeString(privateKeyB64)
 	if err != nil {
-		log.Fatal("Failed to decode private key:", err)
+		logger.Log.WithError(err).Fatal("Failed to decode private key")
 	}
 
 	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privateKeyPEM)
 	if err != nil {
-		log.Fatal("Failed to parse private key:", err)
+		logger.Log.WithError(err).Fatal("Failed to parse private key")
 	}
+
 	return privateKey
-}
-
-func loadPublicKey() *rsa.PublicKey {
-	publicKeyB64 := os.Getenv("PUBLIC_KEY_BASE64")
-
-	publicKeyPEM, err := base64.StdEncoding.DecodeString(publicKeyB64)
-	if err != nil {
-		log.Fatal("Failed to decode public key:", err)
-	}
-
-	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKeyPEM)
-	if err != nil {
-		log.Fatal("Failed to parse public key:", err)
-	}
-	return publicKey
 }
 
 func generateJWT(username string, role string) (string, error) {

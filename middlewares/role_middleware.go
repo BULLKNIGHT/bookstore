@@ -2,8 +2,9 @@ package middlewares
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
+
+	"github.com/BULLKNIGHT/bookstore/logger"
 )
 
 func RoleMiddleware(requiredRole string) func(http.Handler) http.Handler {
@@ -11,7 +12,7 @@ func RoleMiddleware(requiredRole string) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			role, ok := r.Context().Value(roleKey).(string)
 
-			fmt.Println(role)
+			logger.Log.WithField("role", role).Info()
 
 			if !ok || role != requiredRole {
 				w.WriteHeader(http.StatusForbidden)

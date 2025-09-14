@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/BULLKNIGHT/bookstore/db"
+	"github.com/BULLKNIGHT/bookstore/logger"
 	"github.com/BULLKNIGHT/bookstore/models"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -36,7 +36,7 @@ func getAllBooks() ([]models.Book, error) {
 
 	defer cursor.Close(context.Background())
 
-	fmt.Println("All books: ", books)
+	logger.Log.Info("All books fetched successfully!! ✅")
 
 	return books, nil
 }
@@ -48,7 +48,7 @@ func insertBook(book models.Book) (*mongo.InsertOneResult, error) {
 		return result, err
 	}
 
-	fmt.Println("Book inserted successfully with id: ", result.InsertedID)
+	logger.Log.WithField("id", result.InsertedID).Info("Book inserted successfully!! 👌")
 	return result, nil
 }
 
@@ -62,7 +62,7 @@ func updateBook(book models.Book) (*mongo.UpdateResult, error) {
 		return result, err
 	}
 
-	fmt.Println("Book updated successfully with modified count: ", result.ModifiedCount)
+	logger.Log.WithField("modified_count", result.ModifiedCount).Info("Book updated successfully!! 👌")
 	return result, nil
 }
 
@@ -74,7 +74,7 @@ func deleteBook(bookId bson.ObjectID) (*mongo.DeleteResult, error) {
 		return result, nil
 	}
 
-	fmt.Println("Book deleted successfully with delete count: ", result.DeletedCount)
+	logger.Log.WithField("delete_count", result.DeletedCount).Info("Book deleted successfully!! ✅")
 	return result, nil
 }
 
@@ -86,7 +86,7 @@ func deleteAllBooks() (*mongo.DeleteResult, error) {
 		return result, err
 	}
 
-	fmt.Println("All books deleted successfully with delete count: ", result.DeletedCount)
+	logger.Log.WithField("delete_count", result.DeletedCount).Info("All books deleted successfully!! ✅")
 	return result, nil
 }
 
@@ -174,6 +174,7 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		logger.Log.WithError(err).Error(err.Error())
 		json.NewEncoder(w).Encode(err)
 		return
 	}

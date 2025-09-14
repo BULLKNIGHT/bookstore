@@ -6,11 +6,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
 	"os"
 	"strings"
 
+	"github.com/BULLKNIGHT/bookstore/logger"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -21,14 +21,14 @@ func loadPublicKey() *rsa.PublicKey {
 	publicKeyPEM, err := base64.StdEncoding.DecodeString(encodedKey)
 
 	if err != nil {
-		log.Fatal("Failed to decode jwt public key: ", err)
+		logger.Log.WithError(err).Fatal("Failed to decode jwt public key 🔑!!")
 	}
 
 	// Parse the token
 	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKeyPEM)
 
 	if err != nil {
-		log.Fatal("Failed to parse jwt public key: ", err)
+		logger.Log.WithError(err).Fatal("Failed to parse jwt public key 🔑!!")
 	}
 
 	return publicKey
@@ -76,6 +76,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
+			logger.Log.WithError(err).Error(err.Error())
 			json.NewEncoder(w).Encode(err)
 			return
 		}
