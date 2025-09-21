@@ -13,7 +13,7 @@ const collectionName = "books"
 
 var Collection *mongo.Collection
 
-func Init() {
+func Init() (*mongo.Client, error) {
 	dbURL := os.Getenv("MONGO_URL")
 	// client options
 	optionClient := options.Client().ApplyURI(dbURL)
@@ -22,7 +22,7 @@ func Init() {
 	client, err := mongo.Connect(optionClient)
 
 	if err != nil {
-		logger.Log.WithError(err).Fatal("MongoDB connection failed!! 👎")
+		return nil, err
 	}
 
 	logger.Log.Info("MongoDB connected successfully!! 👍")
@@ -31,4 +31,6 @@ func Init() {
 	Collection = client.Database(dbName).Collection(collectionName)
 
 	logger.Log.Info("Collection instance is ready!! 👌")
+
+	return client, nil
 }
