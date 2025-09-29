@@ -1,12 +1,17 @@
 package otel
 
 import (
+	"context"
+
+	"github.com/BULLKNIGHT/bookstore/logger"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.37.0"
 )
+
+var tp *sdktrace.TracerProvider
 
 func Init() (*sdktrace.TracerProvider, error) {
 	// Create stdout exporter
@@ -17,7 +22,7 @@ func Init() (*sdktrace.TracerProvider, error) {
 	}
 
 	// Create a tracer provider
-	tp := sdktrace.NewTracerProvider(
+	tp = sdktrace.NewTracerProvider(
 		sdktrace.WithBatcher(exporter),
 		sdktrace.WithResource(
 			resource.NewWithAttributes(
@@ -31,4 +36,12 @@ func Init() (*sdktrace.TracerProvider, error) {
 	otel.SetTracerProvider(tp)
 
 	return tp, nil
+}
+
+func ShutDown() {
+	if err := tp.Shutdown(context.Background()); err != nil {
+		logger.Log.WithError(err).Error("Failed to shutdown tracer provider!! 👎")
+	} else {
+		logger.Log.Info("Tracer provider shutdown gracefully!! 👎")
+	}
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/BULLKNIGHT/bookstore/db"
@@ -23,7 +22,7 @@ func init() {
 }
 
 func main() {
-	tp, err := otel.Init()
+	_, err := otel.Init()
 
 	if err != nil {
 		logger.Log.WithError(err).Error("Failed to create tracer provider!! 👎")
@@ -31,14 +30,10 @@ func main() {
 	}
 
 	defer func() {
-		if err := tp.Shutdown(context.Background()); err != nil {
-			logger.Log.WithError(err).Error("Failed to shutdown tracer provider!! 👎")
-		} else {
-			logger.Log.Info("Tracer provider shutdown gracefully!! 👎")
-		}
+		otel.ShutDown()
 	}()
 
-	client, err := db.Init()
+	_, err = db.Init()
 
 	if err != nil {
 		logger.Log.WithError(err).Error("MongoDB connection failed!! 👎")
@@ -46,11 +41,7 @@ func main() {
 	}
 
 	defer func() {
-		if err := client.Disconnect(context.Background()); err != nil {
-			logger.Log.WithError(err).Error("MongoDB failed to disconnect!! 👎")
-		} else {
-			logger.Log.Info("MongoDB disconnected gracefully!! 👍")
-		}
+		db.Disconnect()
 	}()
 
 	r := mux.NewRouter()

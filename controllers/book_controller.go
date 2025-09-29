@@ -10,13 +10,14 @@ import (
 	"github.com/BULLKNIGHT/bookstore/logger"
 	"github.com/BULLKNIGHT/bookstore/models"
 	"github.com/gorilla/mux"
-	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func getAllBooks() ([]models.Book, error) {
+func getAllBooks(ctx context.Context) ([]models.Book, error) {
 	filter := bson.M{}
-	cursor, err := db.Collection.Find(context.Background(), filter)
+	cursor, err := db.Collection.Find(ctx, filter)
 
 	var books []models.Book
 
@@ -24,7 +25,7 @@ func getAllBooks() ([]models.Book, error) {
 		return books, err
 	}
 
-	for cursor.Next(context.Background()) {
+	for cursor.Next(ctx) {
 		var book models.Book
 
 		if err = cursor.Decode(&book); err != nil {
@@ -34,15 +35,15 @@ func getAllBooks() ([]models.Book, error) {
 		books = append(books, book)
 	}
 
-	defer cursor.Close(context.Background())
+	defer cursor.Close(ctx)
 
 	logger.Log.Info("All books fetched successfully!! ✅")
 
 	return books, nil
 }
 
-func insertBook(book models.Book) (*mongo.InsertOneResult, error) {
-	result, err := db.Collection.InsertOne(context.Background(), book)
+func insertBook(book models.Book, ctx context.Context) (*mongo.InsertOneResult, error) {
+	result, err := db.Collection.InsertOne(ctx, book)
 
 	if err != nil {
 		return result, err
@@ -52,11 +53,11 @@ func insertBook(book models.Book) (*mongo.InsertOneResult, error) {
 	return result, nil
 }
 
-func updateBook(book models.Book) (*mongo.UpdateResult, error) {
+func updateBook(book models.Book, ctx context.Context) (*mongo.UpdateResult, error) {
 	filter := bson.M{"_id": book.ID}
 	update := bson.M{"$set": book}
 
-	result, err := db.Collection.UpdateOne(context.Background(), filter, update)
+	result, err := db.Collection.UpdateOne(ctx, filter, update)
 
 	if err != nil {
 		return result, err
@@ -65,22 +66,21 @@ func updateBook(book models.Book) (*mongo.UpdateResult, error) {
 	logger.Log.WithField("modified_count", result.ModifiedCount).Info("Book updated successfully!! 👌")
 	return result, nil
 }
-
-func deleteBook(bookId bson.ObjectID) (*mongo.DeleteResult, error) {
+func deleteBook(bookId primitive.ObjectID, ctx context.Context) (*mongo.DeleteResult, error) {
 	filter := bson.M{"_id": bookId}
-	result, err := db.Collection.DeleteOne(context.Background(), filter)
+	result, err := db.Collection.DeleteOne(ctx, filter)
 
 	if err != nil {
-		return result, nil
+		return result, err
 	}
 
 	logger.Log.WithField("delete_count", result.DeletedCount).Info("Book deleted successfully!! ✅")
 	return result, nil
 }
 
-func deleteAllBooks() (*mongo.DeleteResult, error) {
+func deleteAllBooks(ctx context.Context) (*mongo.DeleteResult, error) {
 	filter := bson.M{}
-	result, err := db.Collection.DeleteMany(context.Background(), filter)
+	result, err := db.Collection.DeleteMany(ctx, filter)
 
 	if err != nil {
 		return result, err
@@ -115,7 +115,7 @@ func validateBook(r *http.Request) (models.Book, error) {
 func GetAllBooks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	books, err := getAllBooks()
+	books, err := getAllBooks(r.Context())
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -136,9 +136,8 @@ func CreateBook(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(err.Error())
 		return
 	}
-
-	book.ID = bson.NewObjectID()
-	_, err = insertBook(book)
+	book.ID = primitive.NewObjectID()
+	_, err = insertBook(book, r.Context())
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -151,9 +150,8 @@ func CreateBook(w http.ResponseWriter, r *http.Request) {
 
 func UpdateBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-
 	params := mux.Vars(r)
-	bookId, err := bson.ObjectIDFromHex(params["id"])
+	bookId, err := primitive.ObjectIDFromHex(params["id"])
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -170,7 +168,7 @@ func UpdateBook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	book.ID = bookId
-	result, err := updateBook(book)
+	result, err := updateBook(book, r.Context())
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -192,7 +190,7 @@ func DeleteBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	params := mux.Vars(r)
-	bookId, err := bson.ObjectIDFromHex(params["id"])
+	bookId, err := primitive.ObjectIDFromHex(params["id"])
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -200,7 +198,7 @@ func DeleteBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := deleteBook(bookId)
+	result, err := deleteBook(bookId, r.Context())
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -220,7 +218,7 @@ func DeleteBook(w http.ResponseWriter, r *http.Request) {
 func DeleteAllBooks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	_, err := deleteAllBooks()
+	_, err := deleteAllBooks(r.Context())
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
