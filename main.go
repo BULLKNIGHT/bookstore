@@ -27,22 +27,22 @@ func main() {
 	if err != nil {
 		logger.Log.WithError(err).Error("Failed to create tracer provider!! 👎")
 		return
+	} else {
+		defer func() {
+			otel.ShutDown()
+		}()
 	}
 
-	defer func() {
-		otel.ShutDown()
-	}()
-
 	_, err = db.Init()
-
+	
 	if err != nil {
 		logger.Log.WithError(err).Error("MongoDB connection failed!! 👎")
 		return
+	} else {
+		defer func() {
+			db.Disconnect()
+		}()
 	}
-
-	defer func() {
-		db.Disconnect()
-	}()
 
 	r := mux.NewRouter()
 
@@ -52,5 +52,8 @@ func main() {
 
 	routes.RegisterBook(r)
 
-	logger.Log.Fatal(http.ListenAndServe(":4000", r))
+	err = http.ListenAndServe(":4000", r)
+	if err != nil {
+		logger.Log.WithError(err).Error("Server failed to start")
+	}
 }
