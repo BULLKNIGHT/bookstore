@@ -2,58 +2,119 @@ package otel
 
 import (
 	"context"
+	"log"
 	"os"
 
-	"github.com/BULLKNIGHT/bookstore/logger"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/log/global"
+	sdklog "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.37.0"
 	"google.golang.org/grpc/credentials"
 )
 
-var tp *sdktrace.TracerProvider
+var tracerProvider *sdktrace.TracerProvider
+var loggerProvider *sdklog.LoggerProvider
+var shutDownFuncs []func()
 
-func Init() (*sdktrace.TracerProvider, error) {
+func Init() error {
+	nrEndPoint := "otlp.nr-data.net:4317"
+	headers := map[string]string{"api-key": os.Getenv("NEW_RELIC_LICENSE_KEY")}
+	res := resource.NewWithAttributes(
+		semconv.SchemaURL,
+		semconv.ServiceNameKey.String("bookstore-api"),
+	)
+
+	if err := initLogProvider(res, nrEndPoint, headers); err != nil {
+		return err
+	}
+
+	shutDownFuncs = append(shutDownFuncs, logShutDown)
+
+	if err := initTraceProvider(res, nrEndPoint, headers); err != nil {
+		return err
+	}
+
+	shutDownFuncs = append(shutDownFuncs, traceShutDown)
+
+	return nil
+}
+
+func initTraceProvider(res *resource.Resource, endPoint string, headers map[string]string) error {
 	// Create stdout exporter
 	// exporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
 
-	//OTLP exporter to NewRelics
-	exporter, err := otlptracegrpc.New(
+	//OTLP trace exporter to NewRelics
+	traceExporter, err := otlptracegrpc.New(
 		context.Background(),
-		otlptracegrpc.WithEndpoint("otlp.nr-data.net:4317"),
-		otlptracegrpc.WithHeaders(map[string]string{
-			"api-key": os.Getenv("NEW_RELIC_LICENSE_KEY"),
-		}),
+		otlptracegrpc.WithEndpoint(endPoint),
+		otlptracegrpc.WithHeaders(headers),
 		otlptracegrpc.WithTLSCredentials(credentials.NewClientTLSFromCert(nil, "")),
 	)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Create a tracer provider
-	tp = sdktrace.NewTracerProvider(
-		sdktrace.WithBatcher(exporter),
-		sdktrace.WithResource(
-			resource.NewWithAttributes(
-				semconv.SchemaURL,
-				semconv.ServiceNameKey.String("bookstore-api"),
-			),
-		),
+	tracerProvider = sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(traceExporter),
+		sdktrace.WithResource(res),
 	)
 
 	// Set global tracer provider
-	otel.SetTracerProvider(tp)
+	otel.SetTracerProvider(tracerProvider)
 
-	return tp, nil
+	return nil
+}
+
+func initLogProvider(res *resource.Resource, endPoint string, headers map[string]string) error {
+	//OTLP log exporter to NewRelics
+	logExporter, err := otlploggrpc.New(
+		context.Background(),
+		otlploggrpc.WithEndpoint(endPoint),
+		otlploggrpc.WithHeaders(headers),
+	)
+
+	if err != nil {
+		return err
+	}
+
+	// Create a log provider
+	loggerProvider = sdklog.NewLoggerProvider(
+		sdklog.WithProcessor(sdklog.NewBatchProcessor(logExporter)),
+		sdklog.WithResource(res),
+	)
+
+	// Set global logger provider
+	global.SetLoggerProvider(loggerProvider)
+
+	return nil
+}
+
+func traceShutDown() {
+	if err := tracerProvider.Shutdown(context.Background()); err != nil {
+		log.Printf("Failed to shutdown tracer provider: %v", err)
+	} else {
+		log.Println("Tracer provider shutdown gracefully!! 👍")
+	}
+}
+
+func logShutDown() {
+	if err := loggerProvider.Shutdown(context.Background()); err != nil {
+		log.Printf("Failed to shutdown logger provider: %v", err)
+	} else {
+		log.Println("Logger provider shutdown gracefully!! 👍")
+	}
 }
 
 func ShutDown() {
-	if err := tp.Shutdown(context.Background()); err != nil {
-		logger.Log.WithError(err).Error("Failed to shutdown tracer provider!! 👎")
-	} else {
-		logger.Log.Info("Tracer provider shutdown gracefully!! 👎")
+	for _, shutDown := range shutDownFuncs {
+		shutDown()
 	}
+
+	log.Println("OpenTelemetry shut down successfully.")
 }

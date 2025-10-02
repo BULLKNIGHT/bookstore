@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/contrib/bridges/otellogrus"
 )
 
 /*
@@ -23,5 +24,20 @@ func Init() {
 	Log = logrus.New()
 	Log.SetOutput(os.Stdout)
 	Log.SetFormatter(&logrus.JSONFormatter{})
-	Log.SetLevel(logrus.InfoLevel)
+	Log.SetLevel(logrus.DebugLevel)
+
+	hook := otellogrus.NewHook(
+		"bookstore-api/logging",
+		otellogrus.WithLevels([]logrus.Level{
+			logrus.InfoLevel,
+			logrus.WarnLevel,
+			logrus.ErrorLevel,
+			logrus.FatalLevel,
+			logrus.PanicLevel,
+		}),
+	)
+	
+	Log.AddHook(hook)
+
+	Log.Info("Logrus initialized and connected to OpenTelemetry.")
 }

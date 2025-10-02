@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/BULLKNIGHT/bookstore/db"
@@ -12,20 +13,15 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func init() {
-	err := godotenv.Load()
-	if err != nil {
-		logger.Log.WithError(err).Error("No .env file found (using system env)")
+func main() {
+	// Load env variables
+	if err := godotenv.Load(); err != nil {
+		log.Printf("No .env file found (using system env): %v", err)
 	}
 
-	logger.Init()
-}
-
-func main() {
-	_, err := otel.Init()
-
-	if err != nil {
-		logger.Log.WithError(err).Error("Failed to create tracer provider!! 👎")
+	// Initialize OpenTelemetry
+	if err := otel.Init(); err != nil {
+		log.Printf("OpenTelemetry failed to initiate: %v", err)
 		return
 	} else {
 		defer func() {
@@ -33,9 +29,11 @@ func main() {
 		}()
 	}
 
-	_, err = db.Init()
-	
-	if err != nil {
+	// Initialize logger
+	logger.Init()
+
+	// Initialize DB
+	if _, err := db.Init(); err != nil {
 		logger.Log.WithError(err).Error("MongoDB connection failed!! 👎")
 		return
 	} else {
@@ -52,7 +50,7 @@ func main() {
 
 	routes.RegisterBook(r)
 
-	err = http.ListenAndServe(":4000", r)
+	err := http.ListenAndServe(":4000", r)
 	if err != nil {
 		logger.Log.WithError(err).Error("Server failed to start")
 	}
