@@ -11,6 +11,7 @@ import (
 	"github.com/BULLKNIGHT/bookstore/routes"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
 )
 
 func main() {
@@ -45,7 +46,7 @@ func main() {
 	r := mux.NewRouter()
 
 	r.Use(middlewares.RecoverMiddleware)
-	r.Use(middlewares.TraceMiddleware)
+	r.Use(otelmux.Middleware("bookstore-api"))
 	r.Use(middlewares.LoggerMiddleware)
 
 	routes.RegisterBook(r)
