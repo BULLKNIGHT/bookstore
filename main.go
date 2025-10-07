@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/BULLKNIGHT/bookstore/db"
+	_ "github.com/BULLKNIGHT/bookstore/docs"
 	"github.com/BULLKNIGHT/bookstore/logger"
 	"github.com/BULLKNIGHT/bookstore/middlewares"
 	"github.com/BULLKNIGHT/bookstore/otel"
@@ -14,6 +15,20 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
 )
 
+// @title Bookstore API
+// @version 1.0
+// @description This is a Bookstore server.
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host bookstore.swagger.io
+// @BasePath /v2
 func main() {
 	// Load env variables
 	if err := godotenv.Load(); err != nil {
