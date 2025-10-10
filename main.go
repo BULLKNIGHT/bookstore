@@ -17,7 +17,7 @@ import (
 
 // @title Bookstore API
 // @version 1.0
-// @description This is a Bookstore server.
+// @description This is a Bookstore server with JWT authentication.
 // @termsOfService http://swagger.io/terms/
 
 // @contact.name API Support
@@ -27,8 +27,13 @@ import (
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host bookstore.swagger.io
-// @BasePath /v2
+// @host localhost:4000
+// @BasePath /
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 func main() {
 	// Load env variables
 	if err := godotenv.Load(); err != nil {

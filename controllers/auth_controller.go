@@ -78,6 +78,17 @@ func validateUser(r *http.Request) (models.User, error) {
 	return user, nil
 }
 
+// GenerateToken godoc
+// @Summary Generate JWT token
+// @Description Generate a JWT token for user authentication
+// @Tags authentication
+// @Accept json
+// @Produce json
+// @Param user body models.User true "User credentials (name and role)"
+// @Success 200 {object} string "JWT token"
+// @Failure 400 {object} string "Bad request - invalid user data"
+// @Failure 500 {object} string "Internal server error - token generation failed"
+// @Router /token [post]
 func GenerateToken(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 

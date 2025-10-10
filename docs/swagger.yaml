@@ -1,16 +1,284 @@
-basePath: /v2
-host: bookstore.swagger.io
+basePath: /
+definitions:
+  models.Book:
+    description: Book information with details like title, author, price, etc.
+    properties:
+      author:
+        example: Charles Babage
+        type: string
+      category:
+        example: Programming
+        type: string
+      isbn:
+        example: 978-0134190440
+        type: string
+      price:
+        example: 2999
+        type: integer
+      published_year:
+        example: 2015
+        type: integer
+      title:
+        example: The Go Programming Language
+        type: string
+    type: object
+  models.User:
+    description: User information for authentication and authorization
+    properties:
+      name:
+        example: john_doe
+        type: string
+      role:
+        example: guest
+        type: string
+    type: object
+host: localhost:4000
 info:
   contact:
     email: support@swagger.io
     name: API Support
     url: http://www.swagger.io/support
-  description: This is a Bookstore server.
+  description: This is a Bookstore server with JWT authentication.
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
   title: Bookstore API
   version: "1.0"
-paths: {}
+paths:
+  /book:
+    post:
+      consumes:
+      - application/json
+      description: Add a new book to the database (Admin only)
+      parameters:
+      - description: Book object
+        in: body
+        name: book
+        required: true
+        schema:
+          $ref: '#/definitions/models.Book'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Book'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden - Admin role required
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Create a new book
+      tags:
+      - books
+  /book/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a book by ID (Admin only)
+      parameters:
+      - description: Book ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Data deleted successfully
+          schema:
+            type: string
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden - Admin role required
+          schema:
+            type: string
+        "404":
+          description: Book not found
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete a book
+      tags:
+      - books
+    put:
+      consumes:
+      - application/json
+      description: Update an existing book by ID (Admin only)
+      parameters:
+      - description: Book ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Book object
+        in: body
+        name: book
+        required: true
+        schema:
+          $ref: '#/definitions/models.Book'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Book'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden - Admin role required
+          schema:
+            type: string
+        "404":
+          description: Book not found
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update a book
+      tags:
+      - books
+  /books:
+    delete:
+      consumes:
+      - application/json
+      description: Delete all books from the database (Admin only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: All books deleted successfully
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden - Admin role required
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete all books
+      tags:
+      - books
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all books from the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Book'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get all books
+      tags:
+      - books
+  /health:
+    get:
+      description: Welcome message for the API
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Welcome to book API
+          schema:
+            type: string
+      summary: Home page
+      tags:
+      - general
+  /token:
+    post:
+      consumes:
+      - application/json
+      description: Generate a JWT token for user authentication
+      parameters:
+      - description: User credentials (name and role)
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: JWT token
+          schema:
+            type: string
+        "400":
+          description: Bad request - invalid user data
+          schema:
+            type: string
+        "500":
+          description: Internal server error - token generation failed
+          schema:
+            type: string
+      summary: Generate JWT token
+      tags:
+      - authentication
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
