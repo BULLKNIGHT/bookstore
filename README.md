@@ -8,6 +8,7 @@ A high-performance, secure backend service for managing book inventory, built wi
 - **CRUD Operations:** Full set of RESTful CRUD operations (Create, Read, Update, Delete).
 - **Data Storage:** MongoDB persistence.
 - **Security:** JWT Authentication with Role-Based Access Control (RBAC) for Admin/User roles.
+- **Rate Limiting:** Token-bucket based rate limiting to prevent API abuse and ensure fair usage.
 - **API Documentation:** Interactive Swagger/OpenAPI 3.0 documentation with authentication support.
 - **Logging:** Logrus for structured logging with OTLP correlation.
 - **Observability:** Complete integration of Traces, Metrics, and Logs via OpenTelemetry Protocol (OTLP/gRPC).
@@ -98,7 +99,7 @@ The server will start on `http://localhost:4000`
 ```
 bookstore/
 ├── controllers/         # HTTP handlers and business logic
-├── middlewares/         # Authentication, logging, and recovery middleware
+├── middlewares/         # Authentication, rate limiting, logging, and recovery middleware
 ├── models/             # Data models and validation
 ├── routes/             # Route definitions and middleware chaining
 ├── db/                 # Database connection and configuration

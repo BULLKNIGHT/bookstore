@@ -66,6 +66,7 @@ func main() {
 	r := mux.NewRouter()
 
 	r.Use(middlewares.RecoverMiddleware)
+	r.Use(middlewares.RateLimiterMiddleware)
 	r.Use(otelmux.Middleware("bookstore-api"))
 	r.Use(middlewares.LoggerMiddleware)
 
