@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/BULLKNIGHT/bookstore/db"
 	_ "github.com/BULLKNIGHT/bookstore/docs"
@@ -72,7 +73,13 @@ func main() {
 
 	routes.RegisterBook(r)
 
-	err := http.ListenAndServe(":4000", r)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "4000"
+		logger.Log.Info("Using default port 4000")
+	}
+
+	err := http.ListenAndServe(":"+port, r)
 	if err != nil {
 		logger.Log.WithError(err).Error("Server failed to start")
 	}

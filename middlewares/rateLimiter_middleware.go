@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/BULLKNIGHT/bookstore/logger"
 	"golang.org/x/time/rate"
 )
 
@@ -28,6 +29,7 @@ func RateLimiterMiddleware(next http.Handler) http.Handler {
 		if !limiter.Allow() {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusTooManyRequests)
+			logger.Log.Error("Too many requests")
 			json.NewEncoder(w).Encode(map[string]string{"error": "Too many requests"})
 			return
 		}
