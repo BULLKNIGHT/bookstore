@@ -1,0 +1,6 @@
+# secrets
+.env
+.env.*
+
+# binaries
+app
