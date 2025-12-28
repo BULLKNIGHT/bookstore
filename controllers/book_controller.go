@@ -302,8 +302,8 @@ func DeleteAllBooks(w http.ResponseWriter, r *http.Request) {
 // @Description Welcome message for the API
 // @Tags general
 // @Produce plain
-// @Success 200 {string} string "Welcome to book API"
+// @Success 200 {string} string "Welcome to bookstore API"
 // @Router /health [get]
 func ServeHome(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Welcome to book API"))
+	w.Write([]byte("Welcome to bookstore API"))
 }
