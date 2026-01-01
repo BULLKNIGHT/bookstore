@@ -2,6 +2,9 @@
 
 A high-performance, secure backend service for managing book inventory, built with Go, MongoDB, and integrated with OpenTelemetry for full observability in New Relic.
 
+## 🎥 Demo
+
+https://github.com/user-attachments/assets/7a677e66-287a-4bc1-ba60-df822baa0a8a
 
 ## ✨ Features
 
@@ -13,7 +16,6 @@ A high-performance, secure backend service for managing book inventory, built wi
 - **Logging:** Logrus for structured logging with OTLP correlation.
 - **Observability:** Complete integration of Traces, Metrics, and Logs via OpenTelemetry Protocol (OTLP/gRPC).
 - **Monitoring:** All telemetry is sent directly to New Relic for analysis and alerting.
-
 
 ## � API Documentation
 
